@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-surface text-white;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+}
+
+/* Leaflet dark mode tweaks */
+.leaflet-container {
+  background: #1a1d27 !important;
+}
+.leaflet-popup-content-wrapper {
+  background: #1a1d27;
+  color: #f9fafb;
+  border: 1px solid #2a2d3a;
+  border-radius: 8px;
+}
+.leaflet-popup-tip {
+  background: #1a1d27;
+}

@@ -1,0 +1,31 @@
+{
+  "name": "farmtrack-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^4.2.1",
+    "axios": "^1.7.9",
+    "date-fns": "^4.1.0",
+    "react-datepicker": "^7.5.0"
+  },
+  "devDependencies": {
+    "react-scripts": "5.0.1",
+    "tailwindcss": "^3.4.17",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test"
+  },
+  "browserslist": {
+    "production": [">0.2%", "not dead"],
+    "development": ["last 1 chrome version"]
+  },
+  "proxy": "http://localhost:5000"
+}

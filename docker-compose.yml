@@ -1,0 +1,97 @@
+version: "3.9"
+
+# ── FarmTrack GPS Platform — Docker Compose ───────────────────────────────────
+# Production-style multi-container stack.
+# For local dev, copy backend/.env.example → backend/.env and fill in values.
+
+services:
+
+  # ── MySQL ───────────────────────────────────────────────────────────────────
+  db:
+    image: mysql:8.3
+    container_name: farmtrack-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE:      farmtrack
+      MYSQL_USER:          ${DB_USER:-farmtrack_user}
+      MYSQL_PASSWORD:      ${DB_PASSWORD:-farmtrack_pass}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ── Redis (rate limiting + JWT blocklist) ───────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: farmtrack-redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 5
+
+  # ── Flask API ───────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: farmtrack-api
+    restart: always
+    env_file: ./backend/.env
+    environment:
+      DB_HOST:     db
+      DB_PORT:     3306
+      REDIS_URL:   redis://redis:6379/0
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - logs:/var/log/farmtrack
+
+  # ── React Frontend (production build served by Nginx) ──────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: farmtrack-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    environment:
+      REACT_APP_API_URL: /api
+
+  # ── Nginx Reverse Proxy ─────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: farmtrack-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/ssl:/etc/ssl/farmtrack:ro       # mount your SSL certs here
+    depends_on:
+      - api
+      - frontend
+
+volumes:
+  db_data:
+  redis_data:
+  logs:
